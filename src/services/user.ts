@@ -25,15 +25,28 @@ interface GoogleTokenResult {
 class UserService {
     public static async verifyGoogleAuthToken(token: string){
         console.log("1");
+        if (!token) {
+            throw new Error("No Google authentication token provided.");
+        }        
         const googleToken = token;
         const googleOauthURL = new URL('https://oauth2.googleapis.com/tokeninfo')
         googleOauthURL.searchParams.set('id_token', googleToken);
         console.log("2");
 
-        const { data } = await axios.get<GoogleTokenResult>(googleOauthURL.toString(), {
-            responseType: 'json',
-        })
+        let data;
+        try {
+            const response = await axios.get<GoogleTokenResult>(googleOauthURL.toString(), {
+                responseType: 'json',
+            });
+            data = response.data;
+        } catch (error) {
+            console.error("Error fetching Google token info:", error);
+            throw new Error("Invalid Google token or failed to fetch token info");
+        }
         console.log("3");
+        if (!data.email) {
+            throw new Error("Invalid Google token: Email not found");
+        }
 
         let user;
     
